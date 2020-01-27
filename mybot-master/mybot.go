@@ -3,20 +3,22 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "usage: mybot slack-bot-token\n")
-		os.Exit(1)
+	data, err := ioutil.ReadFile("token.txt")
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return
 	}
+	strData := string(data)
 
 	// start a websocket-based Real Time API session
-	ws, id := slackConnect(os.Args[1])
+	ws, id := slackConnect(strData)
 	fmt.Println("mybot ready, ^C exits")
 
 	for {
