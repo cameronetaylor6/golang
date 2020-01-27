@@ -53,8 +53,8 @@ func slackStart(token string) (wsurl, id string, err error) {
 		return
 	}
 
-	wsurl = respObj.Url
-	id = respObj.Self.Id
+	wsurl = respObj.URL
+	id = respObj.Self.ID
 	return
 }
 
@@ -76,7 +76,7 @@ func getMessage(ws *websocket.Conn) (m Message, err error) {
 var counter uint64
 
 func postMessage(ws *websocket.Conn, m Message) error {
-	m.Id = atomic.AddUint64(&counter, 1)
+	m.ID = atomic.AddUint64(&counter, 1)
 	return websocket.JSON.Send(ws, m)
 }
 
