@@ -5,7 +5,12 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
+
+	"golang.org/x/net/websocket"
 )
+
+var acceptedSingleCommands = []string{"help", "yah", "bread"}
+var acceptedTupleCommands = []string{"yah yeet"}
 
 func main() {
 	token, err := ioutil.ReadFile("token.txt")
@@ -30,21 +35,57 @@ func main() {
 		if m.Type == "message" && strings.HasPrefix(m.Text, "<@"+id+">") {
 			// if so try to parse if
 			parts := strings.Fields(m.Text)
-			if len(parts) == 2 && parts[1] == "help" {
+			if len(parts) == 2 {
 				go func(m Message) {
-					m.Text = fmt.Sprintf("@botname yah\n@botname help")
-					postMessage(ws, m)
+					buildAndPostMessage(ws, m, processSingleCommand(parts[1]))
 				}(m)
-			} else if len(parts) == 2 && parts[1] == "yah" {
+			} else if len(parts) == 3 {
 				go func(m Message) {
-					m.Text = "yeet"
-					postMessage(ws, m)
+					buildAndPostMessage(ws, m, processTupleCommand(parts[1], parts[2]))
 				}(m)
 			} else {
-				// huh?
-				m.Text = fmt.Sprintf("sorry, that does not compute. Try \"@botname help\"\n")
-				postMessage(ws, m)
+				buildAndPostMessage(ws, m, createErrorMessage())
 			}
 		}
 	}
+}
+
+func processSingleCommand(command string) string {
+	if command == acceptedSingleCommands[0] {
+		return createCommandList()
+	} else if command == acceptedSingleCommands[1] {
+		return "yeet"
+	} else if command == acceptedSingleCommands[2] {
+		return "let's get this bread"
+	}
+	return createErrorMessage()
+}
+
+func processTupleCommand(first string, second string) string {
+	commands := strings.Fields(acceptedTupleCommands[0])
+	if first == commands[0] && second == commands[1] {
+		return fmt.Sprintf("yah yoink")
+	}
+	return createErrorMessage()
+}
+
+func createErrorMessage() string {
+	errorMessage := "Sorry, that does not compute. Try one of the below commands.\n"
+	return errorMessage + createCommandList()
+}
+
+func createCommandList() string {
+	commands := ""
+	for _, command := range acceptedSingleCommands {
+		commands = commands + "@botname " + command + "\n"
+	}
+	for _, command := range acceptedTupleCommands {
+		commands = commands + "@botname " + command + "\n"
+	}
+	return commands
+}
+
+func buildAndPostMessage(ws *websocket.Conn, m Message, text string) {
+	m.Text = text
+	postMessage(ws, m)
 }
